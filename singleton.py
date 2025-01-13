@@ -1,3 +1,5 @@
+from memento import Caretaker
+
 class GameSingleton:
     """Singleton class to manage game."""
     _instance = None
@@ -11,6 +13,7 @@ class GameSingleton:
             cls._instance.remaining_mines = 0
             cls._instance.state = state.PlayingState()
             cls._instance.observers = []
+            cls._instance.caretaker = Caretaker() 
         return cls._instance
 
     def add_observer(self, observer):

@@ -4,11 +4,13 @@ import state
 from singleton import GameSingleton
 from board import generate_board
 from observer import MinesLabelObserver
+from memento import Memento
 
-def create_gui():
-    root = tk.Tk()
-    root.title("Minesweeper")
-
+def create_gui(root=None):
+    if root is None:
+        root = tk.Tk()
+        root.title("Minesweeper")
+    
     def start_game(strategy):
         for widget in root.winfo_children():
             widget.destroy()
@@ -47,7 +49,15 @@ def create_game(root, strategy):
 
     observer = MinesLabelObserver(mines_label)
     game.add_observer(observer)
-    
+
+    menu = tk.Menu(root)
+    root.config(menu=menu)
+    game_menu = tk.Menu(menu, tearoff=0)
+    menu.add_cascade(label="Menu", menu=game_menu)
+    game_menu.add_command(label="New Game", command=lambda: restart_game(root))
+    game_menu.add_command(label="Save Game", command=lambda: save_game(game))
+    game_menu.add_command(label="Load Game", command=lambda: load_game(game))
+
 def on_click(x, y):
     game = GameSingleton()
     game.state.handle_click(x, y)
@@ -55,3 +65,47 @@ def on_click(x, y):
 def on_right_click(x, y):
     game = GameSingleton()
     game.state.handle_right_click(x, y)
+
+def restart_game(root):
+    for widget in root.winfo_children():
+        widget.destroy()
+    create_gui(root)
+
+def save_game(game):
+    game_state = {
+        "board": game.board,
+        "remaining_mines": game.remaining_mines,
+        "buttons_state": [[(btn["state"], btn["text"], btn["bg"]) for btn in row] for row in game.buttons],
+        "state": game.state,
+    }
+    memento = Memento(game_state)
+    game.caretaker.save_state(memento)
+    tk.messagebox.showinfo("Save Game", "Game saved successfully!")
+
+def load_game(game):
+    memento = game.caretaker.get_last_state()
+    if memento:
+        state = memento.state
+        saved_size = len(state["board"])
+        current_size = len(game.board) if game.board else 0
+
+        if saved_size != current_size:
+            tk.messagebox.showwarning(
+                "Load Game", f"Saved board size ({saved_size}x{saved_size}) does not match the current board size ({current_size}x{current_size})."
+            )
+            return
+
+        game.board = state["board"]
+        game.remaining_mines = state["remaining_mines"]
+        game.state = state["state"]
+
+        for i, row in enumerate(state["buttons_state"]):
+            for j, (btn_state, btn_text, btn_bg) in enumerate(row):
+                btn = game.buttons[i][j]
+                btn["state"] = btn_state
+                btn["text"] = btn_text
+                btn["bg"] = btn_bg
+
+        tk.messagebox.showinfo("Load Game", "Game loaded successfully!")
+    else:
+        tk.messagebox.showinfo("Load Game", "No saved game available.")
