@@ -3,6 +3,7 @@ import strategy
 import state
 from singleton import GameSingleton
 from board import generate_board
+from observer import MinesLabelObserver
 
 def create_gui():
     root = tk.Tk()
@@ -41,9 +42,12 @@ def create_game(root, strategy):
             btn.bind("<Button-3>", lambda event, x=i, y=j: on_right_click(x, y))
             game.buttons[i][j] = btn
     
-    game.mines_label = tk.Label(root, text=f"Mines Remaining: {num_mines}")
-    game.mines_label.grid(row=size, column=0, columnspan=size)
+    mines_label = tk.Label(root, text=f"Mines Remaining: {num_mines}")
+    mines_label.grid(row=size, column=0, columnspan=size)
 
+    observer = MinesLabelObserver(mines_label)
+    game.add_observer(observer)
+    
 def on_click(x, y):
     game = GameSingleton()
     game.state.handle_click(x, y)

@@ -1,5 +1,5 @@
 class GameSingleton:
-    """Singleton class to manage game state."""
+    """Singleton class to manage game."""
     _instance = None
 
     def __new__(cls, *args, **kwargs):
@@ -10,8 +10,21 @@ class GameSingleton:
             cls._instance.buttons = None
             cls._instance.remaining_mines = 0
             cls._instance.state = state.PlayingState()
+            cls._instance.observers = []
         return cls._instance
-    
-    def update_mines_label(self):
-        if hasattr(self, 'mines_label'):
-            self.mines_label.config(text=f"Mines Remaining: {self.remaining_mines}")
+
+    def add_observer(self, observer):
+        """Add observer."""
+        self.observers.append(observer)
+
+    def remove_observer(self, observer):
+        """Remove observer."""
+        self.observers.remove(observer)
+
+    def notify_observers(self):
+        """Notify observer."""
+        for observer in self.observers:
+            observer.update(self)
+
+    def flagged_mine(self):
+        self.notify_observers()

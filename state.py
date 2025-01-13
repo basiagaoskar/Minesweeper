@@ -1,4 +1,4 @@
-import tkinter as tk
+from tkinter import messagebox
 from singleton import GameSingleton
 from board import reveal_board
 
@@ -35,9 +35,12 @@ class PlayingState(GameState):
                 button["text"] = ""
                 game.remaining_mines += 1
             else:
-                button["text"] = "⚫"
-                game.remaining_mines -= 1
-            game.update_mines_label()
+                if game.remaining_mines > 0:
+                    button["text"] = "⚫"
+                    game.remaining_mines -= 1
+                else:
+                    messagebox.showwarning("Warning", "You have already marked all the mines.")
+            game.flagged_mine()
 
 class GameOverState(GameState):
     """Game state after lossing."""
@@ -49,15 +52,15 @@ class GameOverState(GameState):
                     game.buttons[i][j]["text"] = 'M'
                 game.buttons[i][j]["state"] = "disabled"
                 game.buttons[i][j]["bg"] = "#d3d3d3"
-        tk.messagebox.showinfo("Game Over", "You hit a mine!")
+        messagebox.showinfo("Game Over", "You hit a mine!")
 
     def handle_right_click(self, x, y):
-        tk.messagebox.showinfo("Game Over", "You can't mark cells after the game is over.")
+        messagebox.showinfo("Game Over", "You can't mark cells after the game is over.")
 
 class VictoryState(GameState):
     """Game state after winning."""
     def handle_click(self, x, y):
-        tk.messagebox.showinfo("Congratulations", "You cleared the board!")
+        messagebox.showinfo("Congratulations", "You cleared the board!")
 
     def handle_right_click(self, x, y):
-        tk.messagebox.showinfo("Victory", "You can't mark cells after winning the game.")
+        messagebox.showinfo("Victory", "You can't mark cells after winning the game.")
