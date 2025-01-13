@@ -1,9 +1,6 @@
 import tkinter as tk
-
-from strategy import EasyBoardStrategy
-from strategy import MediumBoardStrategy
-from strategy import HardBoardStrategy
-
+import strategy
+import state
 from singleton import GameSingleton
 from board import generate_board
 
@@ -19,11 +16,11 @@ def create_gui():
     tk.Label(root, text="Choose Difficulty:", font=("Arial", 16), pady=10).grid(row=0, column=0, padx=20)
 
     tk.Button(root, text="Easy", font=("Arial", 14), width=15, height=2,
-              command=lambda: start_game(EasyBoardStrategy())).grid(row=1, column=0, pady=10)
+              command=lambda: start_game(strategy.EasyBoardStrategy())).grid(row=1, column=0, pady=10)
     tk.Button(root, text="Medium", font=("Arial", 14), width=15, height=2,
-              command=lambda: start_game(MediumBoardStrategy())).grid(row=2, column=0, pady=10)
+              command=lambda: start_game(strategy.MediumBoardStrategy())).grid(row=2, column=0, pady=10)
     tk.Button(root, text="Hard", font=("Arial", 14), width=15, height=2,
-              command=lambda: start_game(HardBoardStrategy())).grid(row=3, column=0, pady=10)
+              command=lambda: start_game(strategy.HardBoardStrategy())).grid(row=3, column=0, pady=10)
 
     root.mainloop()
 
@@ -33,12 +30,24 @@ def create_game(root, strategy):
     game = GameSingleton()
     game.board = generate_board(size, num_mines)
     game.remaining_mines = num_mines
-
+    game.state = state.PlayingState()
 
     game.buttons = [[None for _ in range(size)] for _ in range(size)]
 
     for i in range(size):
         for j in range(size):
-            btn = tk.Button(root, text="", width=3, height=1)
+            btn = tk.Button(root, text="", width=3, height=1, command=lambda x=i, y=j: on_click(x, y))
             btn.grid(row=i, column=j)
+            btn.bind("<Button-3>", lambda event, x=i, y=j: on_right_click(x, y))
             game.buttons[i][j] = btn
+    
+    game.mines_label = tk.Label(root, text=f"Mines Remaining: {num_mines}")
+    game.mines_label.grid(row=size, column=0, columnspan=size)
+
+def on_click(x, y):
+    game = GameSingleton()
+    game.state.handle_click(x, y)
+
+def on_right_click(x, y):
+    game = GameSingleton()
+    game.state.handle_right_click(x, y)
