@@ -69,6 +69,11 @@ def on_right_click(x, y):
 def restart_game(root):
     for widget in root.winfo_children():
         widget.destroy()
+
+    game = GameSingleton()
+    for observer in game.observers[:]:
+        game.remove_observer(observer)
+        
     create_gui(root)
 
 def save_game(game):
@@ -105,6 +110,8 @@ def load_game(game):
                 btn["state"] = btn_state
                 btn["text"] = btn_text
                 btn["bg"] = btn_bg
+
+        game.notify_observers()
 
         tk.messagebox.showinfo("Load Game", "Game loaded successfully!")
     else:
